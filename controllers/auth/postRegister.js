@@ -6,11 +6,16 @@ const postRegister = async (req, res) => {
   try {
     const { username, mail, password } = req.body;
 
-    //check if user exist
-    const userExist = await User.exists({ mail: mail.toLowerCase() });
-    if (userExist) {
-      return res.status(409).send("Email already in use.");
+    console.log("user register request came");
+    // check if user exists
+    const userExists = await User.exists({ mail: mail.toLowerCase() });
+
+    console.log(userExists);
+
+    if (userExists) {
+      return res.status(409).send("E-mail already in use.");
     }
+
     // encrypt password
     const encryptedPassword = await bcrypt.hash(password, 10);
 
@@ -21,7 +26,7 @@ const postRegister = async (req, res) => {
       password: encryptedPassword,
     });
 
-    //create JWT token
+    // create JWT token
     const token = jwt.sign(
       {
         userId: user._id,
@@ -33,16 +38,17 @@ const postRegister = async (req, res) => {
       }
     );
 
-    // rend response to client
     res.status(201).json({
       userDetails: {
         mail: user.mail,
+        token: token,
         username: user.username,
-        token,
+        _id: user._id,
       },
     });
-  } catch (error) {
-    return res.status(500).send("Something is wrong. Please try again.");
+  } catch (err) {
+    return res.status(500).send("Error occured. Please try again");
   }
 };
+
 module.exports = postRegister;
